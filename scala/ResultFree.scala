@@ -1,4 +1,4 @@
-import java.io.{FileWriter, PrintWriter, File}
+import java.io.FileWriter
 
 object ResultFree extends App {
 
@@ -6,6 +6,9 @@ object ResultFree extends App {
     def fmap[A, B](m: F[A])(f: A => B): F[B]
   }
 
+  /**
+   * Free Monad
+   */
   sealed trait FreeM[S[+ _], +A] {
     def flatMap[B](f: A => FreeM[S, B])(implicit s: Functor[S]): FreeM[S, B]
 
@@ -17,9 +20,13 @@ object ResultFree extends App {
   }
 
   case class Free[S[+ _], +A](k: S[FreeM[S, A]]) extends FreeM[S, A] {
-    def flatMap[B](f: A => FreeM[S, B])(implicit s: Functor[S]): FreeM[S, B] = Free(s.fmap(k)(_.flatMap(f)))
+    def flatMap[B](f: A => FreeM[S, B])(implicit s: Functor[S]): FreeM[S, B] =
+      Free(s.fmap(k)((i: FreeM[S, A]) => i.flatMap(f)))
   }
 
+  /**
+   * Type to convert to Monad by Free
+   */
   sealed trait Result[+A]
 
   case class Get[+A](a: A) extends Result[A]
@@ -33,11 +40,9 @@ object ResultFree extends App {
     }
   }
 
-
-  def liftF[S[+ _] : Functor, A](f: A => FreeM[Result, A], cmd: A): FreeM[Result, A] = {
-    Free(resultFunctor.fmap(Get(cmd))(f))
-  }
-
+  /**
+   * interpreter for Result Free Monad
+   */
   def interpreter(f: String => Unit)(free: FreeM[Result, String]): Unit = {
     free match {
       case Free(Get(r)) => f(s"Get: $r"); interpreter(f)(r)
@@ -46,17 +51,28 @@ object ResultFree extends App {
     }
   }
 
+  /**
+   * StdIO interpreter
+   */
   def runStdIO(free: FreeM[Result, String]): Unit = {
     interpreter(println)(free)
   }
 
+  def log(msg: String)(implicit writer: FileWriter): Unit = {
+    writer.append(msg + "\n")
+  }
+
+  /**
+   * FileIO interpreter
+   */
   def runFileIO(free: FreeM[Result, String]): Unit = {
-    def log(msg: String): Unit = {
-      val file = new FileWriter("free.log", true)
-      file.append(msg + "\n")
-      file.close()
-    }
+    implicit val writer = new FileWriter("free.log", true)
     interpreter(log)(free)
+    writer.close()
+  }
+
+  def liftF[S[+ _] : Functor, A](f: A => FreeM[Result, A], cmd: A): FreeM[Result, A] = {
+    Free(resultFunctor.fmap(Get(cmd))(f))
   }
 
   def getF(x: String): FreeM[Result, String] = {
