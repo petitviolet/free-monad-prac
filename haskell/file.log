@@ -1,0 +1,8 @@
+Result is Free (Get (Free (Get (Pure 10))))
+Result is Free (Get (Pure 10))
+Result is Pure 10
+return 10
+Result is Free (Get (Free (Get (Pure 10))))
+Result is Free (Get (Pure 10))
+Result is Pure 10
+return 10
