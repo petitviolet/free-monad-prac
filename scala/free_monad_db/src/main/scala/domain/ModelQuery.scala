@@ -10,6 +10,8 @@ sealed trait ModelQuery[+A]
  */
 case class Get[+A, B](id: Long, onResult: B => A) extends ModelQuery[A]
 
+case class GetList[+A, B](ids: Seq[Long], onResult: B => Seq[A]) extends ModelQuery[Seq[A]]
+
 case class Put[+A](name: String, email: String, next: A) extends ModelQuery[A]
 
 case class Delete[+A](id: Long, next: A) extends ModelQuery[A]
@@ -38,6 +40,10 @@ object ModelQuery {
 
   def get[A](id: Long): FreeM[ModelQuery, A] = {
     liftF(Get[A, A](id, identity))
+  }
+
+  def getList[A](ids: Seq[Long]): FreeM[ModelQuery, Seq[A]] = {
+    liftF(GetList[A, Seq[A]](ids, (x: Seq[A]) => x ))
   }
 
   def put(name: String, email: String): FreeM[ModelQuery, Unit] = {

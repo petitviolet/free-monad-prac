@@ -11,7 +11,7 @@ import scala.collection.mutable.{Map => mMap}
  */
 object UserRunner extends App {
 
-  type Id[A] = A
+  type Id[+A] = A
 
   // emulation of DB
   var dict = mMap.empty[Long, User]
@@ -20,6 +20,10 @@ object UserRunner extends App {
   def findUser(id: Long): User = {
     println(s"find: $dict")
     dict(id)
+  }
+
+  def findUsers(ids: Seq[Long]): Seq[User] = {
+    dict.collect { case (id, user) if ids.contains(id) => user }.toSeq
   }
 
   // actual behavior of Pet
@@ -35,13 +39,20 @@ object UserRunner extends App {
     dict.remove(id)
   }
 
+  type FreeUser = FreeM[ModelQuery, User]
+
   // interpreter combined ModelQuery and User
-  def interpreterUser(free: FreeM[ModelQuery, User]): Id[User] =
+  def interpreterUser(free: FreeUser): User =
     free match {
-      case Free(Get(id: Long, onResult: (User => FreeM[ModelQuery, User]))) =>
+      case Free(Get(id, onResult: (User => FreeUser))) =>
         // find when Get
-        val user = findUser(id)
+        val user: User = findUser(id)
         interpreterUser(onResult(user))
+      case Free(GetList(ids, onResult: (Seq[User] => FreeM[ModelQuery, Seq[User]]))) =>
+        // findUser when GetList
+        val users: Seq[User] = findUsers(ids)
+        val hoge = onResult(users)
+        interpreterUser(hoge)
       case Free(Put(name, email, next)) =>
         // put when Put
         putUser(name, email)
@@ -50,17 +61,17 @@ object UserRunner extends App {
         // delete when Delete
         deleteUser(id)
         interpreterUser(next)
-        // when comes Pure, it is the end of sequential functions
+      // when comes Pure, it is the end of sequential functions
       case Pure(x) => x
     }
 
   // sample sequential functions, conducted by some interpreter not only `interpreterUser`
-  def sequence[A](id: Long): FreeM[ModelQuery, A] = {
+  def sequence(id: Long): FreeUser = {
     for {
       _ <- put("name1", "email1")
       _ <- put("name2", "email2")
       _ <- delete(1)
-      x <- get[A](id)
+      x <- get(id)
     } yield x
   }
 
