@@ -21,3 +21,5 @@ case class Free[S[+ _], +A](k: S[FreeM[S, A]]) extends FreeM[S, A] {
   def flatMap[B](f: A => FreeM[S, B])(implicit s: Functor[S]): FreeM[S, B] =
     Free(s.fmap(k)((i: FreeM[S, A]) => i.flatMap(f)))
 }
+
+

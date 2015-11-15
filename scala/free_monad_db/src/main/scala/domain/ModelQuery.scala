@@ -1,15 +1,23 @@
 package domain
 
-import domain.model.User
-
+/**
+ * Base of Query
+ */
 sealed trait ModelQuery[+A]
 
+/**
+ * Constructor of DSLs
+ */
 case class Get[+A, B](id: Long, onResult: B => A) extends ModelQuery[A]
 
 case class Put[+A](name: String, email: String, next: A) extends ModelQuery[A]
 
 case class Delete[+A](id: Long, next: A) extends ModelQuery[A]
 
+/**
+ * defined some functions of DSL
+ * use these in implementation of interpreter
+ */
 object ModelQuery {
 
 
@@ -17,7 +25,7 @@ object ModelQuery {
   //
   //  case class UpdateName[+A](name: String, next: A) extends UserQuery[Boolean]
 
-  def liftF[F[+_]: Functor, A](fa: F[A])(implicit f: Functor[F]): FreeM[F, A] =
+  def liftF[F[+ _] : Functor, A](fa: F[A])(implicit f: Functor[F]): FreeM[F, A] =
     Free(f.fmap(fa) { a => Pure(a) })
 
   implicit val userFunctor = new Functor[ModelQuery] {
@@ -39,14 +47,4 @@ object ModelQuery {
   def delete(id: Long): FreeM[ModelQuery, Unit] = {
     liftF(Delete(id, ()))
   }
-
-  def sequency[A](id: Long): FreeM[ModelQuery, A] = {
-    for {
-      i <- put("name1", "email1")
-      j <- put("name2", "email2")
-      k <- delete(1)
-      x <- get[A](id)
-    } yield x
-  }
-
 }
