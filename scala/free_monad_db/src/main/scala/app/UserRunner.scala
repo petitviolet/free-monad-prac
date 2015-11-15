@@ -26,13 +26,13 @@ object UserRunner extends App {
   def putUser(name: String, email: String): Unit = {
     println(s"put: $dict")
     val nextId = if (dict.isEmpty) 0 else dict.keySet.max + 1L
-    dict = mMap(nextId -> User(nextId, name, email)) ++ dict
+    dict.put(nextId, User(nextId, name, email))
   }
 
   // actual behavior of Delete
   def deleteUser(id: Long): Unit = {
     println(s"delete: $dict")
-    dict = dict -= id
+    dict.remove(id)
   }
 
   // interpreter combined ModelQuery and User
