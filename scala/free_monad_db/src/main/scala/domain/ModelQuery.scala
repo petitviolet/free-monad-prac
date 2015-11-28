@@ -33,6 +33,7 @@ object ModelQuery {
   implicit val userFunctor = new Functor[ModelQuery] {
     def fmap[A, B](u: ModelQuery[A])(f: A => B): ModelQuery[B] = u match {
       case Get(id, next: (B => A)) => Get(id, f compose next)
+//      case GetList(ids, next: (B => Seq[A])) => GetList(ids, next andThen(_.map(f)))
       case Put(name, email, next) => Put(name, email, f(next))
       case Delete(id, next) => Delete(id, f(next))
     }
@@ -43,7 +44,7 @@ object ModelQuery {
   }
 
   def getList[A](ids: Seq[Long]): FreeM[ModelQuery, Seq[A]] = {
-    liftF(GetList[A, Seq[A]](ids, (x: Seq[A]) => x ))
+    liftF(GetList[A, Seq[A]](ids, identity))
   }
 
   def put(name: String, email: String): FreeM[ModelQuery, Unit] = {

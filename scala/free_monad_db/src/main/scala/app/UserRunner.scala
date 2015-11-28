@@ -48,11 +48,11 @@ object UserRunner extends App {
         // find when Get
         val user: User = findUser(id)
         interpreterUser(onResult(user))
-      case Free(GetList(ids, onResult: (Seq[User] => FreeM[ModelQuery, Seq[User]]))) =>
-        // findUser when GetList
-        val users: Seq[User] = findUsers(ids)
-        val hoge = onResult(users)
-        interpreterUser(hoge)
+//      case Free(GetList(ids, onResult: (Seq[User] => Seq[FreeUser]))) =>
+//        // findUser when GetList
+//        val users: Seq[User] = findUsers(ids)
+//        val next: Seq[FreeUser] = onResult(users)
+//        next.map(user => interpreterUser(user)).head
       case Free(Put(name, email, next)) =>
         // put when Put
         putUser(name, email)
@@ -70,14 +70,15 @@ object UserRunner extends App {
     for {
       _ <- put("name1", "email1")
       _ <- put("name2", "email2")
-      _ <- delete(1)
-      x <- get(id)
+//      _ <- delete(1)
+      x <- get[User](id)
+//      y <- getList[User](Seq(1, 2))
     } yield x
   }
 
   // actual behaviors of UserRunner App
   println(s"start: $dict")
-  val result: Id[User] = interpreterUser(sequence(0))
+  val result: User = interpreterUser(sequence(0))
   println(s"end: $dict")
   println(s"result => $result")
 }
