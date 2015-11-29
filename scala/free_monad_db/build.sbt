@@ -13,6 +13,10 @@ libraryDependencies ++= Seq(
   "ch.qos.logback" % "logback-classic" % "1.1.+"
 )
 
+libraryDependencies += "org.scalaz" %% "scalaz-core" % "7.1.1"
+
+initialCommands += "import scalaz._, Scalaz._"
+
 scalacOptions ++= Seq(
   "-deprecation",
   "-feature",
