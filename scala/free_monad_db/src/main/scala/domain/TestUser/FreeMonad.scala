@@ -1,4 +1,4 @@
-package domain
+package domain.TestUser
 
 trait Functor[F[_]] {
   def fmap[A, B](m: F[A])(f: A => B): F[B]

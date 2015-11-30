@@ -1,7 +1,8 @@
 package app
 
+import domain.TestUser._
 import domain._
-import domain.ModelQuery._
+import ModelQuery._
 import domain.model.User
 
 import scala.collection.mutable.{Map => mMap}
@@ -48,7 +49,11 @@ object UserRunner extends App {
         // find when Get
         val user: User = findUser(id)
         interpreterUser(onResult(user))
-//      case Free(GetList(ids, onResult: (Seq[User] => Seq[FreeUser]))) =>
+//      case Free(GetList(ids, onResult: (Seq[User] => Seq[FreeUser]))) =>//      case Free(GetList(ids, onResult: (Seq[User] => Seq[FreeUser]))) =>
+      //        // findUser when GetList
+      //        val users: Seq[User] = findUsers(ids)
+      //        val next: Seq[FreeUser] = onResult(users)
+      //        next.map(user => interpreterUser(user)).head
 //        // findUser when GetList
 //        val users: Seq[User] = findUsers(ids)
 //        val next: Seq[FreeUser] = onResult(users)
