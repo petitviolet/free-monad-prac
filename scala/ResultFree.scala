@@ -29,13 +29,13 @@ object ResultFree extends App {
    */
   sealed trait Result[+A]
 
-  case class Get[+A](a: A) extends Result[A]
+  case class Success[+A](a: A) extends Result[A]
 
   case class Fail[+A]() extends Result[A]
 
   implicit val resultFunctor = new Functor[Result] {
     def fmap[A, B](a: Result[A])(f: A => B): Result[B] = a match {
-      case Get(x) => Get(f(x))
+      case Success(x) => Success(f(x))
       case Fail() => Fail()
     }
   }
@@ -45,7 +45,7 @@ object ResultFree extends App {
    */
   def interpreter(f: String => Unit)(free: FreeM[Result, String]): Unit = {
     free match {
-      case Free(Get(r)) => f(s"Get: $r"); interpreter(f)(r)
+      case Free(Success(r)) => f(s"Success: $r"); interpreter(f)(r)
       case Free(Fail()) => f("Fail")
       case Pure(r) => f(s"pure: $r")
     }
@@ -72,19 +72,19 @@ object ResultFree extends App {
   }
 
   def liftF[S[+ _] : Functor, A](f: A => FreeM[Result, A], cmd: A): FreeM[Result, A] = {
-    Free(resultFunctor.fmap(Get(cmd))(f))
+    Free(resultFunctor.fmap(Success(cmd))(f))
   }
 
-  def getF(x: String): FreeM[Result, String] = {
-    val _get: String => FreeM[Result, String] = x => Free(Get(Pure(x)))
-    liftF(_get, x)
+  def successF(x: String): FreeM[Result, String] = {
+    val _success: String => FreeM[Result, String] = x => Free(Success(Pure(x)))
+    liftF(_success, x)
   }
 
   def failF: FreeM[Result, _] = Free(Fail())
 
   val io: FreeM[Result, String] = for {
-    x <- getF("hoge")
-    y <- getF("foo")
+    x <- successF("hoge")
+    y <- successF("foo")
     z <- failF
   } yield x + y + y
 
